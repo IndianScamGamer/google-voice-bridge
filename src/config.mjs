@@ -36,7 +36,7 @@ export function getConfig(projectRoot) {
     defaultSmsTo: process.env.GV_DEFAULT_SMS_TO || process.env.GV_DEFAULT_CALL_TO || '',
     smsStateFile: process.env.GV_SMS_STATE_FILE || path.join(projectRoot, 'tmp', 'sms-state.json'),
     smsLockDir: process.env.GV_SMS_LOCK_DIR || path.join(projectRoot, 'tmp', 'sms.lock'),
-    sayText: process.env.GV_SAY_TEXT || 'Hi Vivek, this is Shinrou. The call audio bridge is working.',
+    sayText: process.env.GV_SAY_TEXT || 'Hello. The Google Voice call audio bridge is working.',
     audioSink: process.env.GV_AUDIO_SINK || 'gv_tts',
     speakerSink: process.env.GV_SPEAKER_SINK || 'gv_speaker',
     audioDebug: process.env.GV_AUDIO_DEBUG !== '0',

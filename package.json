@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Local Playwright control surface for a manually-authenticated Google Voice browser session.",
+  "description": "Local Google Voice call and SMS bridge for OpenClaw workflows.",
   "scripts": {
     "setup": "npx @puppeteer/browsers install chrome@stable --path .browsers",
     "setup-tts": "python3 -m venv .venv && .venv/bin/pip install edge-tts vosk soundfile faster-whisper kokoro-onnx",

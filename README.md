@@ -1,8 +1,18 @@
 # Google Voice Bridge
 
-Local browser automation for Google Voice. It keeps Google credentials out of code: Vivek logs into `voice.google.com` in a persistent Chromium profile, then Shinrou can reuse that authenticated browser session to answer, place, and hang up calls.
+Local browser automation for Google Voice that gives an OpenClaw agent a phone-number bridge for calls and SMS. Create a free Google Voice number, log into `voice.google.com` in a local browser profile, and let OpenClaw run this CLI to answer calls, place calls with explicit permission, read or send texts, and test speech loops over the phone path.
 
-This is intentionally local-first. The browser profile is private and ignored by git.
+This is intentionally local-first. Google credentials stay in the browser session instead of repo files, and the authenticated browser profile is private and ignored by git.
+
+## What It Enables
+
+- Give OpenClaw a Google Voice number that you can call or text.
+- Let local workflows read and send SMS through a manually authenticated Google Voice session.
+- Control call UI actions such as status checks, answer, dial, and hang up.
+- Route local TTS/STT through calls for phone conversation experiments.
+- Keep credentials, browser profiles, recordings, SMS state, and model downloads out of git.
+
+This repo is a browser-control bridge, not an official Google Voice API. The useful pattern is to keep Google login local and let OpenClaw call small commands such as `sms-poll`, `sms-send`, `answer`, or `conversation` from its own workflows.
 
 ## Setup
 
@@ -21,17 +31,28 @@ This is intentionally local-first. The browser profile is private and ignored by
 
 That opens Google Voice in a visible Chromium window with a persistent profile under `.voice-profile/`. Log in manually and allow microphone permissions if prompted. Leave the browser open for live testing, or close it after confirming the session persists.
 
+## Use With OpenClaw
+
+Run the bridge on the same machine as OpenClaw so the agent can invoke the CLI against the local authenticated browser session. A useful progression is:
+
+1. Set up a Google Voice number and confirm `npm run status` works after login.
+2. Start with manual SMS commands such as `sms-read` and `sms-send`.
+3. Add an OpenClaw workflow that polls SMS, decides whether a reply is appropriate, sends the reply, and marks handled messages so they are not answered twice.
+4. Test phone calls with `answer`, `call`, `speak-call`, and `conversation` only after the permission and audio path are clear.
+
+The CLI emits structured state for several commands, and `tmp/sms-state.json` gives polling workflows a simple local deduplication point. Keep that state local with the browser profile and recordings.
+
 ## Commands
 
     npm run status
     npm run answer
     npm run hangup
     npm run call -- +17045551212
-    npm run speak-call -- +17045551212 --text "Hi Vivek, this is Shinrou."
+    npm run speak-call -- +17045551212 --text "Hello from your phone bridge."
     npm run diagnose-audio -- --text "Audio bridge diagnostic."
     npm run conversation -- +17045551212
     GV_BACKEND=firefox GV_HEADLESS=1 npm run sms-read -- +17045551212
-    GV_BACKEND=firefox GV_HEADLESS=1 npm run sms-send -- +17045551212 --text "Hi Vivek, this is Shinrou."
+    GV_BACKEND=firefox GV_HEADLESS=1 npm run sms-send -- +17045551212 --text "Hello from your OpenClaw phone bridge."
     GV_BACKEND=firefox GV_HEADLESS=1 npm run sms-poll -- +17045551212
     npm run conversation-test -- +17045551212
     npm run screenshot
@@ -57,9 +78,9 @@ For live call tests, keep the browser open after dialing:
 
 To call and speak a short TTS line through a temporary virtual microphone:
 
-    GV_BACKEND=firefox GV_SPEAK_DELAY_MS=10000 GV_KEEP_OPEN_MS=10000 npm run speak-call -- +17045551212 --text "Hi Vivek, this is Shinrou. The audio bridge is working."
+    GV_BACKEND=firefox GV_SPEAK_DELAY_MS=10000 GV_KEEP_OPEN_MS=10000 npm run speak-call -- +17045551212 --text "Hello. The Google Voice audio bridge is working."
 
-This uses pactl to create a temporary 48 kHz mono null sink, sets its monitor as the default microphone source before launching Firefox, generates a clean mono WAV file, then plays that WAV into the sink with ffmpeg. The local `.env` also enables `GV_MOVE_RECORDINGS_AFTER_CALL=1` for the Firefox backend because this was the more reliable route for Vivek's logged-in Snap Firefox profile.
+This uses pactl to create a temporary 48 kHz mono null sink, sets its monitor as the default microphone source before launching Firefox, generates a clean mono WAV file, then plays that WAV into the sink with ffmpeg. If Firefox does not attach to the virtual microphone early enough, try `GV_MOVE_RECORDINGS_AFTER_CALL=1` so the bridge moves active Firefox recording streams after the call starts.
 
 For an audio-hop diagnostic that does not involve Firefox or Google Voice:
 
@@ -78,7 +99,7 @@ Useful live audio inspection commands:
 
 Default TTS is local Kokoro voice `am_echo`. Edge neural TTS is still available as a fallback; avoid heavy pitch/rate changes for calls because phone compression makes them sound more robotic:
 
-    GV_TTS_VOICE=en-US-BrianNeural GV_TTS_RATE=+0% GV_TTS_PITCH=+0Hz GV_BACKEND=firefox npm run speak-call -- +17045551212 --text "Testing Shinrou voice."
+    GV_TTS_VOICE=en-US-BrianNeural GV_TTS_RATE=+0% GV_TTS_PITCH=+0Hz GV_BACKEND=firefox npm run speak-call -- +17045551212 --text "Testing the phone bridge voice."
 
 Kokoro ONNX model files live under `models/kokoro`. One-time setup if they are missing:
 
@@ -88,7 +109,7 @@ Kokoro ONNX model files live under `models/kokoro`. One-time setup if they are m
 
 Then run with:
 
-    GV_TTS_PROVIDER=kokoro GV_KOKORO_VOICE=am_echo GV_KOKORO_SPEED=1.0 GV_KOKORO_VOLUME=0.75 GV_BACKEND=firefox npm run speak-call -- +17045551212 --text "Testing Shinrou voice."
+    GV_TTS_PROVIDER=kokoro GV_KOKORO_VOICE=am_echo GV_KOKORO_SPEED=1.0 GV_KOKORO_VOLUME=0.75 GV_BACKEND=firefox npm run speak-call -- +17045551212 --text "Testing the phone bridge voice."
 
 Good Kokoro male voices to try: `am_echo`, `am_adam`, `am_michael`, `am_onyx`, `am_fenrir`, `am_puck`.
 
@@ -130,7 +151,8 @@ SMS browser commands use `tmp/sms.lock` so background polling does not collide w
 
 ## Safety Rules
 
-- Incoming calls from Vivek can be answered when he asks for testing.
+- Treat calls and texts as external actions in OpenClaw workflows.
+- Answer or place calls only when the workflow and user permission make that appropriate.
 - Outbound calls should only be made after explicit confirmation.
 - Do not store Google credentials, phone numbers, or call content in repo files.
 - `.voice-profile/` is sensitive because it contains browser session data.

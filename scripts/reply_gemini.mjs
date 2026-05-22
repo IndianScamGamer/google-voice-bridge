@@ -18,20 +18,20 @@ process.stdin.on('end', async () => {
 
 function buildPrompt(transcript) {
   const lines = transcript
-    .map((item) => (item.role === 'shinrou' ? 'Shinrou' : 'Vivek') + ': ' + String(item.text || '').trim())
+    .map((item) => (item.role === 'assistant' ? 'Assistant' : 'Caller') + ': ' + String(item.text || '').trim())
     .filter((line) => !line.endsWith(':'));
 
   return [
-    "You are Shinrou, Vivek's concise voice assistant on a live phone call.",
-    "Reply naturally to Vivek's latest message.",
-    'Keep the answer under 22 words unless he explicitly asks for detail.',
+    'You are a concise voice assistant on a live phone call.',
+    "Reply naturally to the caller's latest message.",
+    'Keep the answer under 22 words unless the caller explicitly asks for detail.',
     'Do not mention transcripts, implementation, or being an AI model.',
-    'If he asks for current weather and no live weather data is provided, say you need a weather lookup wired in.',
+    'If the caller asks for current weather and no live weather data is provided, say you need a weather lookup wired in.',
     '',
     'Conversation so far:',
-    lines.join('\n') || 'Vivek: Hello.',
+    lines.join('\n') || 'Caller: Hello.',
     '',
-    'Reply as Shinrou only.'
+    'Reply as the assistant only.'
   ].join('\n');
 }
 
@@ -54,7 +54,7 @@ function runGemini(prompt) {
 
 function cleanReply(text) {
   return String(text || '')
-    .replace(/^Shinrou:\s*/i, '')
+    .replace(/^Assistant:\s*/i, '')
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 280) || 'I heard you, but I need a moment to answer that.';

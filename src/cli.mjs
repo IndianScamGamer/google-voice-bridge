@@ -247,7 +247,7 @@ async function conversationTest() {
     ? new FirefoxVoiceController(config)
     : new GoogleVoiceController(config);
 
-  const promptText = 'Hey Vivek. This is Shinrou. Conversation test. After the beep, say one short sentence, and I will repeat what I heard. Beep.';
+  const promptText = 'Hello. This is a conversation test. After the beep, say one short sentence, and I will repeat what I heard. Beep.';
   const promptFile = await audio.synthesize(promptText);
   const tmpDir = path.join(config.projectRoot, 'tmp');
   const heardFile = path.join(tmpDir, 'heard-' + Date.now() + '.wav');
@@ -343,7 +343,7 @@ async function conversation() {
     const movedSpeaker = await audio.waitAndMovePlaybackToVirtualSpeaker();
     console.error('[conversation] moved speaker ' + JSON.stringify(movedSpeaker));
 
-    await speak(audio, 'Hey Vivek, this is Shinrou. The full conversation loop is online. Say one short sentence after this message, and I will respond.');
+    await speak(audio, 'Hello. The full conversation loop is online. Say one short sentence after this message, and I will respond.');
 
     const fixedTurnLimit = Number.isFinite(config.conversationTurns) && config.conversationTurns > 0
       ? config.conversationTurns
@@ -368,7 +368,7 @@ async function conversation() {
 
       const heardText = normalizeTranscript(await transcribe(config, heardFile));
       console.error('[conversation] turn ' + turn + ' transcript ' + JSON.stringify(heardText));
-      transcript.push({ turn, role: 'vivek', text: heardText, audioFile: heardFile });
+      transcript.push({ turn, role: 'caller', text: heardText, audioFile: heardFile });
 
       if (heardText) silentTurns = 0;
       else silentTurns += 1;
@@ -377,7 +377,7 @@ async function conversation() {
       const replyText = shouldStopForSilence
         ? 'I still cannot hear you clearly, so I am ending this call for now.'
         : await buildConversationReplySafe(config, transcript, turn);
-      transcript.push({ turn, role: 'shinrou', text: replyText });
+      transcript.push({ turn, role: 'assistant', text: replyText });
       fs.writeFileSync(resultFile, JSON.stringify({ ok: true, action: 'conversation', to: number, transcript }, null, 2));
 
       console.error('[conversation] turn ' + turn + ' reply ' + JSON.stringify(replyText));
@@ -412,7 +412,7 @@ function normalizeTranscript(text) {
 }
 
 async function buildConversationReply(config, transcript, turn) {
-  const latest = transcript.filter((item) => item.role === 'vivek').at(-1)?.text || '';
+  const latest = transcript.filter((item) => item.role === 'caller').at(-1)?.text || '';
   if (!latest) return 'I could not hear that clearly. Please say one short sentence again.';
 
   if (config.conversationReplyCommand) {
@@ -429,7 +429,7 @@ async function buildConversationReplySafe(config, transcript, turn) {
     return await buildConversationReply(config, transcript, turn);
   } catch (error) {
     console.error('[conversation] reply command failed ' + (error.stack || error.message));
-    const latest = transcript.filter((item) => item.role === 'vivek').at(-1)?.text || '';
+    const latest = transcript.filter((item) => item.role === 'caller').at(-1)?.text || '';
     return latest
       ? 'I heard you, but my reply model failed locally. Say that again or ask something simpler.'
       : 'I could not hear that clearly. Please say one short sentence again.';

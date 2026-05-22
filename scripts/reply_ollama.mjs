@@ -18,20 +18,20 @@ process.stdin.on('end', async () => {
 
 function buildPrompt(transcript) {
   const lines = transcript
-    .map((item) => (item.role === 'shinrou' ? 'Shinrou' : 'Vivek') + ': ' + String(item.text || '').trim())
+    .map((item) => (item.role === 'assistant' ? 'Assistant' : 'Caller') + ': ' + String(item.text || '').trim())
     .filter((line) => !line.endsWith(':'));
 
   return [
     "/no_think",
-    "You are Shinrou, Vivek\'s concise voice assistant on a live phone call.",
-    "Reply naturally to Vivek\'s latest message in under 22 words.",
+    "You are a concise voice assistant on a live phone call.",
+    "Reply naturally to the caller\'s latest message in under 22 words.",
     "Do not use markdown. Do not explain the system. Do not say you are an AI model.",
-    "If he asks for current weather and no live weather data is provided, say weather lookup is not wired in yet.",
+    "If the caller asks for current weather and no live weather data is provided, say weather lookup is not wired in yet.",
     "",
     "Conversation so far:",
-    lines.join("\n") || "Vivek: Hello.",
+    lines.join("\n") || "Caller: Hello.",
     "",
-    "Shinrou:"
+    "Assistant:"
   ].join("\n");
 }
 
@@ -58,7 +58,7 @@ function cleanReply(text) {
     .replace(/<think>[\s\S]*?<\/think>/gi, '')
     .replace(/^[\s\S]*\.\.\.done thinking\.\s*/i, '')
     .replace(/^Thinking\.\.\.[\s\S]*?(?=\n[A-Z][^\n]{0,260}$)/i, '')
-    .replace(/^Shinrou:\s*/i, '')
+    .replace(/^Assistant:\s*/i, '')
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 280) || 'I heard you, but I need a moment to answer that.';
