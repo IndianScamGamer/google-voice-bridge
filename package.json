@@ -1,0 +1,30 @@
+{
+  "name": "google-voice-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local Playwright control surface for a manually-authenticated Google Voice browser session.",
+  "scripts": {
+    "setup": "npx @puppeteer/browsers install chrome@stable --path .browsers",
+    "setup-tts": "python3 -m venv .venv && .venv/bin/pip install edge-tts vosk soundfile faster-whisper kokoro-onnx",
+    "login": "node src/cli.mjs login",
+    "status": "node src/cli.mjs status",
+    "call": "node src/cli.mjs call",
+    "speak-call": "node src/cli.mjs speak-call",
+    "conversation-test": "node src/cli.mjs conversation-test",
+    "conversation": "node src/cli.mjs conversation",
+    "diagnose-audio": "node scripts/diagnose_audio_path.mjs",
+    "answer": "node src/cli.mjs answer",
+    "hangup": "node src/cli.mjs hangup",
+    "sms-read": "node src/cli.mjs sms-read",
+    "sms-send": "node src/cli.mjs sms-send",
+    "sms-poll": "node src/cli.mjs sms-poll",
+    "sms-mark": "node src/cli.mjs sms-mark",
+    "screenshot": "node src/cli.mjs screenshot"
+  },
+  "dependencies": {
+    "@puppeteer/browsers": "^3.0.2",
+    "playwright": "^1.60.0",
+    "selenium-webdriver": "^4.44.0"
+  }
+}
